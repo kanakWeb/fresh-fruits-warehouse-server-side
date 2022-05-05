@@ -76,7 +76,7 @@ async function run() {
           quantity: updateItem.newQuantity,
         },
       };
-      console.log(updateItem.newQuantity);
+      
       const result = await inventoryItemsCollection.updateOne(
         query,
         updateDoc,
@@ -90,7 +90,6 @@ async function run() {
     app.put('/delivery/:id', async(req, res) => {
         const id = req.params.id
         const newQuantity = req.body
-        console.log(newQuantity);
         const deliverItem = newQuantity.quantity - 1
         const query = { _id: ObjectId(id) }
         const options = { upsert: true };
