@@ -45,15 +45,66 @@ async function run() {
       res.send(inventoryItem);
     });
 
-
-
     //post
 
-    app.post('/inventoryItem',async(req,res)=>{
-        const addItem=req.body;
-        const result=await inventoryItemsCollection.insertOne(addItem)
-        res.send(result)
+    app.post("/inventoryItem", async (req, res) => {
+      const addItem = req.body;
+      const result = await inventoryItemsCollection.insertOne(
+        addItem
+      );
+      res.send(result);
+    });
+
+    //delete
+    app.delete("/inventoryItem/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await inventoryItemsCollection.deleteOne(query);
+      res.send(result);
+    });
+
+
+    //Quantity update 
+
+    app.put("/inventoryItem/:id", async (req, res) => {
+      const id = req.params.id;
+      const updateItem = req.body;
+      const query = { _id: ObjectId(id) };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          quantity: updateItem.newQuantity,
+        },
+      };
+      console.log(updateItem.newQuantity);
+      const result = await inventoryItemsCollection.updateOne(
+        query,
+        updateDoc,
+        options
+      );
+      res.send(result);
+    });
+
+
+    
+    app.put('/delivery/:id', async(req, res) => {
+        const id = req.params.id
+        const newQuantity = req.body
+        console.log(newQuantity);
+        const deliverItem = newQuantity.quantity - 1
+        const query = { _id: ObjectId(id) }
+        const options = { upsert: true };
+        const updateDoc = {
+            $set: {
+                quantity: deliverItem
+            }
+        }
+
+        const result = await inventoryItemsCollection.updateOne(query, updateDoc, options)
+        res.send(result);
     })
+
+
 
 
   } finally {
