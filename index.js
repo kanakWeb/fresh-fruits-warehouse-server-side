@@ -1,59 +1,71 @@
-const express = require('express');
-const cors = require('cors');
-const port=process.env.PORT||5000
+const express = require("express");
+const cors = require("cors");
+const port = process.env.PORT || 5000;
 
-require('dotenv').config();
-const { MongoClient, ServerApiVersion,ObjectId } = require('mongodb');
-const app=express()
+require("dotenv").config();
+const {
+  MongoClient,
+  ServerApiVersion,
+  ObjectId,
+} = require("mongodb");
+const app = express();
 
 //middleware
-app.use(cors())
-app.use(express.json())
-
-
-
-
+app.use(cors());
+app.use(express.json());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.sfzcd.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
+const client = new MongoClient(uri, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  serverApi: ServerApiVersion.v1,
+});
 
 async function run() {
-    try {
-      await client.connect();
-      const inventoryItemsCollection=client.db('FreshFruits').collection('InventoryItems')
+  try {
+    await client.connect();
+    const inventoryItemsCollection = client
+      .db("FreshFruits")
+      .collection("InventoryItems");
+
+    app.get("/inventoryItem", async (req, res) => {
+      const query = {};
+      const cursor = inventoryItemsCollection.find(query);
+
+      const InventoryItems = await cursor.toArray();
+      res.send(InventoryItems);
+    });
+
+    app.get("/inventoryItem/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const inventoryItem = await inventoryItemsCollection.findOne(
+        query
+      );
+      res.send(inventoryItem);
+    });
 
 
-      app.get('/inventoryItems',async(req,res)=>{
-        const  query={}
-        const cursor=inventoryItemsCollection.find(query)
 
-        const InventoryItems=await cursor.toArray()
-        res.send(InventoryItems)
-      })
+    //post
 
-      app.get('/inventoryItem/:id',async(req,res)=>{
-        const id=req.params.id
-        const query={_id:ObjectId(id)}
-        const inventoryItem = await inventoryItemsCollection.findOne(query);
-        res.send(inventoryItem)
-      })
+    app.post('/inventoryItem',async(req,res)=>{
+        const addItem=req.body;
+        const result=await inventoryItemsCollection.insertOne(addItem)
+        res.send(result)
+    })
 
-      
-    } finally {
-      /* await client.close(); */
-    }
+
+  } finally {
+    /* await client.close(); */
   }
-  run().catch(console.dir);
+}
+run().catch(console.dir);
 
+app.get("/", (req, res) => {
+  res.send("connect");
+});
 
-
-
-
-
-app.get('/',(req,res)=>{
-    res.send("connect")
-})
-
-app.listen(port,()=>{
-    console.log('port connect',port);
-})
+app.listen(port, () => {
+  console.log("port connect", port);
+});
