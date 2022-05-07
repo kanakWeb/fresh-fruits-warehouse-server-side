@@ -17,11 +17,20 @@ app.use(express.json());
 
 
 //Verify
-
-
 function verifyJWT(req,res,next){
-  const AuthHeader=req.headers.authorization
-  console.log('inside verifyJWT',AuthHeader);
+  const authHeader=req.headers.authorization
+  if(!authHeader){
+    return res.status(401).send({message:'unAuthorized access'})
+  }
+  const token=authHeader.split(' ')[1];
+  jwt.verify(token,process.env.ACCESS_TOKEN_SECRET,(err,decoded)=>{
+    if(err){
+      return res.status(403).send({message:'Forbidden access'})
+    }
+    console.log('decoded',decoded);
+    req.decoded=decoded
+  })
+  
 next()
 }
 
@@ -132,12 +141,17 @@ async function run() {
 
     //add user items..
     app.get("/inventoryItems",verifyJWT, async (req, res) => {
-      
-      const email = req.query;
-      const query = {};
+      const decodedEmail=req.decoded.email
+      const email = req.query.email;
+      if(email===decodedEmail){
+        const query = {email:email};
       const cursor = inventoryItemsCollection.find(query);
       const addUserItems = await cursor.toArray();
       res.send(addUserItems);
+      }
+      else{
+        res.status(403).send({message:'forbidden access'})
+      }
     });
   } finally {
     /* await client.close(); */
